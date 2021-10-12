@@ -1,0 +1,153 @@
+---
+title: "Assignment 3"
+author: "Prajwal C N"
+date: "10/8/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Weiglet Primal Solution 
+
+
+Q1. Solve the problem using lpSolve or any other equivalent library in R.
+```{r}
+#Weiglet Primal Solution
+library(lpSolveAPI)
+
+lprec<-make.lp(0,9)
+lp.control(lprec,sense='max')
+
+# Objective function with 9 decision variables
+set.objfn(lprec,rep(c(420,360,300),3))  
+
+# Total there are 11 Constraints
+add.constraint(lprec,c(1,1,1),"<=",750,indices = c(1,2,3))
+add.constraint(lprec,c(1,1,1),"<=",900,indices = c(4,5,6))
+add.constraint(lprec,c(1,1,1),"<=",450,indices = c(7,8,9))
+add.constraint(lprec,c(20,15,12),"<=",13000,indices = c(1,2,3))
+add.constraint(lprec,c(20,15,12),"<=",12000,indices = c(4,5,6))
+add.constraint(lprec,c(20,15,12),"<=",5000,indices = c(7,8,9))
+add.constraint(lprec,c(1,1,1),"<=",900,indices = c(1,4,7))
+add.constraint(lprec,c(1,1,1),"<=",1200,indices = c(2,5,8))
+add.constraint(lprec,c(1,1,1),"<=",750,indices = c(3,6,9))
+add.constraint(lprec,c(rep(c(900,-750),each=3)),"=",0,indices = c(1,2,3,4,5,6))
+add.constraint(lprec,c(rep(c(450,-750),each=3)),"=",0,indices = c(1,2,3,7,8,9))
+```
+
+
+Solve LP problem
+```{r}
+solve(lprec)
+```
+Output of above solve is 0,So an optimal solution was obtained
+
+
+Now we can get the value of the objective function, and the variables.
+```{r}
+get.objective(lprec)
+get.constraints(lprec)
+get.variables(lprec)
+```
+From the above solution, we can infer the following :
+Plant 1 : 516.67 of Large Products and 177.78 of Medium Products.
+Plant 2 : 666.67 of Medium Products and 166.67 of Small products.
+Plant 3 : 416.67 of Small Products
+
+
+Q2. Identify the shadow prices,dual solution and reduced costs.
+```{r}
+# Reduced Cost
+get.sensitivity.obj(lprec)
+```
+Reduced cost mentioned in $objfrom and $objtill.
+
+
+
+```{r}
+# Shadow prices
+get.sensitivity.rhs(lprec)
+```
+Shadow prices are mentioned in $duals, and the ranges for shadow price calculations present under $dualsfrom and $dualstill.
+
+
+
+Q3. Further,identify the sensitivity of the above prices and costs.That is,specify the range of shadow prices and reduced cost within which the optimal solution will not change
+```{r}
+s1 <- data.frame(get.sensitivity.rhs(lprec)$duals[1:11],get.sensitivity.rhs(lprec)$dualsfrom[1:11],get.sensitivity.rhs(lprec)$dualstill[1:11])
+names(s1)<-c("price","lower","upper")
+s2 <- data.frame(get.sensitivity.rhs(lprec)$duals[12:20],get.sensitivity.rhs(lprec)$dualsfrom[12:20],get.sensitivity.rhs(lprec)$dualstill[12:20])
+names(s2)<-c("cost","lower","upper")
+
+s1
+s2
+```
+sensitivity of the above prices and costs are mentioned the range of shadow prices comprising of $dualsfrom and $dualstill.
+
+
+The above is the range of shadow prices within which the optimal solution will not change.
+
+
+
+Q4. Formulation of the dual of the above problem 
+
+## Duality theory
+```{r}
+#Duality theory
+library(lpSolveAPI)
+lprec<-make.lp(0,11)
+lp.control(lprec,sense='min')
+# Objective function
+set.objfn(lprec,c(750,900,450,13000,12000,5000,900,1200,750,0,0)) 
+
+add.constraint(lprec,c(1,20,1,900,450),">=",420,indices = c(1,4,9,10,11))
+add.constraint(lprec,c(1,15,1,900,450),">=",360,indices = c(1,4,8,10,11))
+add.constraint(lprec,c(1,12,1,900,450),">=",300,indices = c(1,4,7,10,11))
+add.constraint(lprec,c(1,20,1,-750),">=",420,indices = c(2,5,9,10))
+add.constraint(lprec,c(1,15,1,-750),">=",360,indices = c(2,5,8,10))
+add.constraint(lprec,c(1,12,1,-750),">=",300,indices = c(2,5,7,10))
+add.constraint(lprec,c(1,20,1,-750),">=",420,indices = c(3,6,9,11))
+add.constraint(lprec,c(1,15,1,-750),">=",360,indices = c(3,6,8,11))
+add.constraint(lprec,c(1,12,1,-750),">=",300,indices = c(3,6,7,11))
+
+set.bounds(lprec,lower = c(-Inf,-Inf),columns = 10:11)
+```
+
+
+Solve LP problem
+```{r}
+solve(lprec)
+```
+Output of above solve is 0,So an optimal solution was obtained
+
+
+Now we can get the value of the objective function, and the variables.
+```{r}
+get.objective(lprec)
+get.constraints(lprec)
+get.variables(lprec)
+```
+
+
+
+```{r}
+# reduced costs
+get.sensitivity.obj(lprec)
+```
+Reduced cost mentioned in $objfrom and $objtill.
+
+The above is the range of Reduced cost within which the optimal solution will not change.
+
+
+```{r}
+# shadow prices
+get.sensitivity.rhs(lprec)
+```
+Shadow prices are mentioned in $duals, and the ranges for shadow price calculations present under $dualsfrom and $dualstill.
+
+The above is the range of shadow prices within which the optimal solution will not change.
+
+
+**The Formulation of dual solution agrees with primal solution.**
